@@ -52,18 +52,7 @@ function update ()
 {
  
 }
-function move_pipe(top_pipe, bot_pipe, speed)
-{
-    top_pipe.x -= speed;
-    bot_pipe.x -= speed;
-}
-function delete_pipe(top_pipe)
-{
-    if(top_pipe.x < 0)
-    {
-        top_pipe.destroy();
-    }
-}
+
 
 // Creating a pipe pair since pipes consist of two parts
 class Pipe_pair extends Phaser.Physics.Arcade.Group
