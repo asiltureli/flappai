@@ -31,33 +31,93 @@ function create ()
     // Create Starting Images
     this.add.image(0,0, 'sky').setOrigin(0,0);
 
+    // Create Birds
+    this.BirdGroup = this.physics.add.group({classType: Bird, runChildrenUpdate: true});
+    this.BirdGroup.addMultiple(new Bird({scene:this}));
     // Create Random Generated Pipes
-    pipes = this.physics.add.staticGroup();
-
+    this.PipeGroup = this.physics.add.group({classType: Pipe_pair});
     for(var x_pos = 300; x_pos < 748; x_pos += 175)
     {
-        var top_int = Math.floor(Math.random()*400) + 100;
-        var bottom_int = 600 - top_int - 100;
-        pipes.create(x_pos, top_int/2, 'pipe_top').setScale(1, top_int/320).refreshBody();
-        pipes.create(x_pos, 600-bottom_int/2, 'pipe_bottom').setScale(1,bottom_int/320).refreshBody();
+        this.PipeGroup.addMultiple(this,x_pos);
     }
-   // Create Bird Object 
-   bird = this.physics.add.sprite(50, 300, 'bird');
-   bird.setCollideWorldBounds(true);
-   bird.body.setGravityY(500);
 
+    this.BirdGroup.setVisible(true);
+    this.PipeGroup.setVisible(true);
    // Add Collider
-   this.physics.add.collider(bird, pipes);
+   this.physics.add.collider(this.BirdGroup, this.PipeGroup);
 
 }
 
 function update ()
 {
-    // Bird can be controlled with space key
-    cursors = this.input.keyboard.createCursorKeys();
-
-    if (cursors.space.isDown)
+ 
+}
+function move_pipe(top_pipe, bot_pipe, speed)
+{
+    top_pipe.x -= speed;
+    bot_pipe.x -= speed;
+}
+function delete_pipe(top_pipe)
+{
+    if(top_pipe.x < 0)
     {
-        bird.setVelocityY(-300);
+        top_pipe.destroy();
+    }
+}
+
+// Creating a pipe pair since pipes consist of two parts
+class Pipe_pair extends Phaser.Physics.Arcade.Group
+{
+    constructor(config, x)
+    {
+        super(config.scene, x, config.y);
+        var top_y = Math.floor(Math.random()*400) + 100;
+        var bottom_y = 600 - top_y - 100;
+
+        this.bottom_pipe = new Pipe(config.scene, x, bottom_y/2, 180);
+        this.bottom_pipe.Scale = (1, top_y/320);
+
+        this.top_pipe = new Pipe(config.scene, x, 600-bottom_y/2, 0);
+        this.top_pipe.Scale = (1,bottom_y/320);
+        config.scene.add.existing(this);
+        config.scene.GameObjects.Group.add.existing(this);
+    }
+}
+
+// Creating pipe class inherited from Sprite
+class Pipe extends Phaser.Physics.Arcade.Sprite
+{
+    constructor(config, x, y, angle)
+    {
+        super({scene:config.scene, x:x, y:y, key:'pipe_top', angle: angle});
+    }
+
+    
+}
+
+class Bird extends Phaser.Physics.Arcade.Sprite
+{
+    constructor(config)
+    {
+        super(config.scene, 50, 300, 'bird');
+        config.scene.physics.add.existing(this);
+        config.scene.add.existing(this);
+        this.setCollideWorldBounds(true);
+        
+        this.body.setGravityY(500);
+    }
+    update(config)
+    {
+        // Bird can be controlled with space key
+        cursors = config.scene.input.keyboard.createCursorKeys();
+
+        if (cursors.space.isDown)
+        {
+            this.jump();
+        }
+    }
+    jump()
+    {
+        this.setVelocityY(-300);
     }
 }
