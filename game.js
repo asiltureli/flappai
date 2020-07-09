@@ -30,15 +30,14 @@ function create ()
 {
     // Create Starting Images
     this.add.image(0,0, 'sky').setOrigin(0,0);
-
     // Create Birds
     this.BirdGroup = this.physics.add.group({classType: Bird, runChildrenUpdate: true});
-    this.BirdGroup.addMultiple(new Bird({scene:this}));
+    this.BirdGroup.addMultiple(new Bird(this));
     // Create Random Generated Pipes
-    this.PipeGroup = this.physics.add.group({classType: Pipe_pair});
+    this.PipeGroup = this.physics.add.group({classType: Pipe_pair, runChildrenUpdate: true});
     for(var x_pos = 300; x_pos < 748; x_pos += 175)
     {
-        this.PipeGroup.addMultiple(this,x_pos);
+        this.PipeGroup.addMultiple(new Pipe_pair(this,x_pos));
     }
 
     this.BirdGroup.setVisible(true);
@@ -50,63 +49,58 @@ function create ()
 
 function update ()
 {
- 
+    cursors = this.input.keyboard.createCursorKeys();
+    if (cursors.space.isDown)
+    {
+        this.BirdGroup.getChildren().forEach(element => flap());
+    }
 }
 
 
 // Creating a pipe pair since pipes consist of two parts
 class Pipe_pair extends Phaser.Physics.Arcade.Group
 {
-    constructor(config, x)
+    constructor(scene, x)
     {
-        super(config.scene, x, config.y);
+        super(scene, x, config.y);
         var top_y = Math.floor(Math.random()*400) + 100;
         var bottom_y = 600 - top_y - 100;
 
-        this.bottom_pipe = new Pipe(config.scene, x, bottom_y/2, 180);
-        this.bottom_pipe.Scale = (1, top_y/320);
+        this.bottom_pipe = new Pipe(scene, x, bottom_y/2, 180);
+        this.bottom_pipe.setScale(1, bottom_y/320);
 
-        this.top_pipe = new Pipe(config.scene, x, 600-bottom_y/2, 0);
-        this.top_pipe.Scale = (1,bottom_y/320);
-        config.scene.add.existing(this);
-        config.scene.GameObjects.Group.add.existing(this);
+        this.top_pipe = new Pipe(scene, x, 600-top_y/2, 0);
+        this.top_pipe.setScale(1,top_y/320);
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
     }
 }
 
-// Creating pipe class inherited from Sprite
+// Creating pipe class inherited from Physics Arcade Sprite
 class Pipe extends Phaser.Physics.Arcade.Sprite
 {
-    constructor(config, x, y, angle)
+    constructor(scene, x, y, angle)
     {
-        super({scene:config.scene, x:x, y:y, key:'pipe_top', angle: angle});
+        super(scene, x, y,'pipe_bottom');
+        scene.physics.add.existing(this);
+        scene.add.existing(this);
+        this.setActive(true);
+        this.angle = angle;
     }
-
-    
 }
 
 class Bird extends Phaser.Physics.Arcade.Sprite
 {
-    constructor(config)
+    constructor(scene)
     {
-        super(config.scene, 50, 300, 'bird');
-        config.scene.physics.add.existing(this);
-        config.scene.add.existing(this);
+        super(scene, 50, 300, 'bird');
+        scene.physics.add.existing(this);
+        scene.add.existing(this);
         this.setCollideWorldBounds(true);
-        
         this.body.setGravityY(500);
     }
-    update(config)
+    flap()
     {
-        // Bird can be controlled with space key
-        cursors = config.scene.input.keyboard.createCursorKeys();
-
-        if (cursors.space.isDown)
-        {
-            this.jump();
-        }
-    }
-    jump()
-    {
-        this.setVelocityY(-300);
+        this.body.setVelocityY(-300);
     }
 }
