@@ -53,20 +53,19 @@ function create ()
 
     this.score = 0;
     this.generation = 0;
+    this.alive_num = bird_num;
 
     this.PipeGroup.getChildren().forEach(element => element.velocity(-50));
     //this.PipeGroup.getChildren().forEach(element => element.scale());
     //var top_pipes = this.PipeGroup.getChildren(element => element.top_pipe);
     //var bot_pipes = this.PipeGroup.getChildren(element => element.bottom_pipe);
     // Add Collider
-    this.physics.add.collider(1, this.BirdGroup, this.PipeGroup);
+    this.physics.add.overlap(this.BirdGroup, this.PipeGroup, () => { this.scene.restart });
 
     // Info texts
-    this.score_temp = 'Score: ';
-    this.gen_temp = 'Generation: ';
-    this.score_text = this.add.text(50, 0, this.score_temp + this.score, { fontSize: '16px', fontFamily: 'Arial' });
-    this.generation_text = this.add.text(230, 0, this.gen_temp + this.generation, { fontSize: '16px', fontFamily: 'Arial' });
-    
+    this.score_text = this.add.text(20, 0, 'Score: ' + this.score, { fontSize: '16px', fontFamily: 'Arial' });
+    this.alive_text = this.add.text(150, 0, 'Alive: ' + this.alive_num, { fontSize: '16px', fontFamily: 'Arial' });
+    this.generation_text = this.add.text(260, 0, 'Generation: ' + this.generation, { fontSize: '16px', fontFamily: 'Arial' });
 }
 
 function update ()
@@ -75,10 +74,7 @@ function update ()
     if (cursors.space.isDown)
     {
         this.BirdGroup.getChildren().forEach(element => element.flap());
-        //this.bird_array.forEach(element => flap());
-        //this.test.flap();
     }
-    console.log(this.pipe_objects[this.target_idx].x);
     if(this.pipe_objects[this.reset_idx].x < -100)
     {
         y = Math.floor(Math.random()*200) + 100;
@@ -93,10 +89,8 @@ function update ()
         this.target_idx += 2;
         this.target_idx = this.target_idx % 8;
         this.score ++;
-        this.score_text.setText(this.score_temp + this.score);
+        this.score_text.setText('Score: ' + this.score);
     }
-    console.log("Score:", this.score);   
-
 }
 function create_pairs(scene, x)
 {
