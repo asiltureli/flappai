@@ -1,7 +1,7 @@
 var config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 400,
+    height: 400,
     physics: {
         default: 'arcade',
         arcade:  {
@@ -12,7 +12,7 @@ var config = {
     scene: {
         preload: preload,
         create: create,
-        update: update
+        update: update,
     }
 };
 
@@ -38,21 +38,34 @@ function create ()
         this.BirdGroup.add(new Bird(this), true);
         //bird_array.push(new Bird(this));
     }
-    
     this.BirdGroup.getChildren().forEach(element => element.setCollideWorldBounds(true));
     this.BirdGroup.getChildren().forEach(element => element.setGravityY(800));
     // Create Random Generated Pipes
-    this.PipeGroup = this.physics.add.group({classType: Pipe_pair, runChildUpdate: true});
-    for(var x_pos = 300; x_pos < 1200; x_pos += 175)
+    this.PipeGroup = this.physics.add.group({classType: Pipe, runChildUpdate: true});
+    for(var x_pos = 300; x_pos < 900; x_pos += 150)
     {
-        this.PipeGroup.add(new Pipe_pair(this,x_pos), true);
+        create_pairs(this, x_pos);
     }
-    this.nextPair = this.PipeGroup.getFirst(x=150);
+    
+    this.reset_idx = 0;  // Index of the pipe to reset
+    this.target_idx = 0; // Index of next closest pipe
+    this.pipe_objects = this.PipeGroup.getChildren(); // Array of pipe objects
+
+    this.score = 0;
+    this.generation = 0;
+
     this.PipeGroup.getChildren().forEach(element => element.velocity(-50));
-    var top_pipes = this.PipeGroup.getChildren(element => element.top_pipe);
-    var bot_pipes = this.PipeGroup.getChildren(element => element.bottom_pipe);
+    //this.PipeGroup.getChildren().forEach(element => element.scale());
+    //var top_pipes = this.PipeGroup.getChildren(element => element.top_pipe);
+    //var bot_pipes = this.PipeGroup.getChildren(element => element.bottom_pipe);
     // Add Collider
-    //this.PipeGroup.getChildren().forEach(element => this.physics.add.collider(this.BirdGroup, element));
+    this.physics.add.collider(1, this.BirdGroup, this.PipeGroup);
+
+    // Info texts
+    this.score_temp = 'Score: ';
+    this.gen_temp = 'Generation: ';
+    this.score_text = this.add.text(50, 0, this.score_temp + this.score, { fontSize: '16px', fontFamily: 'Arial' });
+    this.generation_text = this.add.text(230, 0, this.gen_temp + this.generation, { fontSize: '16px', fontFamily: 'Arial' });
     
 }
 
@@ -65,65 +78,34 @@ function update ()
         //this.bird_array.forEach(element => flap());
         //this.test.flap();
     }
-    this.PipeGroup.getChildren().forEach(element => element.reset());
-    this.PipeGroup.getChildren().forEach(element => element.targetPair());
-    console.log(this.nextPair)
-    //this.physics.add.collider(this.BirdGroup, targetPipe);
-    //this.BirdGroup.getChildren().forEach(element => element.collideCheck(targetPipe));
-    
+    console.log(this.pipe_objects[this.target_idx].x);
+    if(this.pipe_objects[this.reset_idx].x < -100)
+    {
+        y = Math.floor(Math.random()*200) + 100;
+        
+        this.pipe_objects[this.reset_idx].reset(y, 0);
+        this.pipe_objects[this.reset_idx+1].reset(y, 1);
+        this.reset_idx += 2;
+        this.reset_idx = this.reset_idx % 8;
+    }
+    if(this.pipe_objects[this.target_idx].x < 10)
+    {
+        this.target_idx += 2;
+        this.target_idx = this.target_idx % 8;
+        this.score ++;
+        this.score_text.setText(this.score_temp + this.score);
+    }
+    console.log("Score:", this.score);   
 
 }
-
-
-// Creating a pipe pair since pipes consist of two parts
-class Pipe_pair extends Phaser.Physics.Arcade.Sprite
+function create_pairs(scene, x)
 {
-    constructor(scene, x)
-    {
-        super(scene, x);
-        this.top_y = Math.floor(Math.random()*300) + 100;
-        this.bottom_y = 600 - this.top_y - 100;
+    let top_y = Math.floor(Math.random()*200) + 100;
+    let bottom_y = 400 - top_y - 200;
 
-        this.bottom_pipe = new Pipe(scene, x, this.bottom_y/2, 180);
-        this.bottom_pipe.setScale(1, this.bottom_y/320);
+    scene.PipeGroup.add(new Pipe(scene, x, bottom_y/2, 180));
 
-        this.top_pipe = new Pipe(scene, x, 600-this.top_y/2, 0);
-        this.top_pipe.setScale(1,this.top_y/320);
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-    }
-    velocity(vel)
-    {
-        this.top_pipe.setVelocityX(vel);
-        this.bottom_pipe.setVelocityX(vel);
-    }
-    reset()
-    {
-        if(this.top_pipe.x < -100)
-        {
-            this.top_pipe.x += 1050;
-            this.bottom_pipe.x += 1050;
-
-            var top_y = Math.floor(Math.random()*300) + 100;
-            var bottom_y = 600 - top_y - 100;
-
-            this.bottom_pipe.y = bottom_y/2;
-            this.bottom_pipe.setScale(1, bottom_y/320);
-
-            this.top_pipe.y = 600-top_y/2;
-            this.top_pipe.setScale(1,top_y/320);
-        }
-    }
-    targetPair()
-    {
-        if(this.top_pipe.x > 15 && this.top_pipe.x < 175)
-        {
-            if(this != game.nextPair)
-            {      
-                game.nextPair = this;
-            }
-        }
-    }
+    scene.PipeGroup.add(new Pipe(scene, x, 500 - top_y/2, 0));
 }
 
 class Pipe extends Phaser.Physics.Arcade.Sprite
@@ -137,6 +119,28 @@ class Pipe extends Phaser.Physics.Arcade.Sprite
         this.body.allowGravity = false;
         this.angle = angle;
     }
+    velocity(vel)
+    {
+        this.setVelocityX(vel);
+    }
+    scale()
+    {
+        this.setScale(1, this.y/320);
+    }
+    reset(y, direction) // Direction 1 = Top Pipe, Direction = 0 Bottom Pipe
+    {
+        this.x += 600;
+        var top_y = y;
+        if(direction)
+        {
+            this.y = 500 - top_y/2;
+        }
+        else
+        {
+            var bottom_y = 400 - top_y - 200;
+            this.y = bottom_y/2;
+        }  
+    }  
 }    
 
 class Bird extends Phaser.Physics.Arcade.Sprite
@@ -150,12 +154,5 @@ class Bird extends Phaser.Physics.Arcade.Sprite
     flap()
     {
         this.body.setVelocityY(-200);
-    }
-    collideCheck(targetPair)
-    {
-        if(this.x < targetPair.top_pipe.x + 20 && this.x > targetPair.top_pipe.x - 20 && this.y < targetPair.bottom_y && this.y > targetPair.top_y)
-        {
-            game.scene.restart()
-        }
     }
 }
