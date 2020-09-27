@@ -32,17 +32,15 @@ function create ()
     this.add.image(0,0, 'sky').setOrigin(0,0);
     // Create Birds
     this.BirdGroup = this.physics.add.group({classType: Bird, runChildUpdate: true});
-    //this.test = new Bird(this);
     for(var bird_num = 0; bird_num < 1; bird_num ++)
     {
-        this.BirdGroup.add(new Bird(this), true);
-        //bird_array.push(new Bird(this));
+        this.BirdGroup.add(new Bird(this, bird_num), true);
     }
     this.BirdGroup.getChildren().forEach(element => element.setCollideWorldBounds(true));
     this.BirdGroup.getChildren().forEach(element => element.setGravityY(800));
     // Create Random Generated Pipes
     this.PipeGroup = this.physics.add.group({classType: Pipe, runChildUpdate: true});
-    for(var x_pos = 300; x_pos < 900; x_pos += 150)
+    for(var x_pos = 200; x_pos < 800; x_pos += 150)
     {
         create_pairs(this, x_pos);
     }
@@ -50,15 +48,13 @@ function create ()
     this.reset_idx = 0;  // Index of the pipe to reset
     this.target_idx = 0; // Index of next closest pipe
     this.pipe_objects = this.PipeGroup.getChildren(); // Array of pipe objects
+    this.bird_objects = this.BirdGroup.getChildren(); // Array of bird objects
 
     this.score = 0;
     this.generation = 0;
     this.alive_num = bird_num;
 
     this.PipeGroup.getChildren().forEach(element => element.velocity(-50));
-    //this.PipeGroup.getChildren().forEach(element => element.scale());
-    //var top_pipes = this.PipeGroup.getChildren(element => element.top_pipe);
-    //var bot_pipes = this.PipeGroup.getChildren(element => element.bottom_pipe);
     // Add Collider
     this.physics.add.overlap(this.BirdGroup, this.PipeGroup, () => { this.scene.restart });
 
@@ -75,6 +71,30 @@ function update ()
     {
         this.BirdGroup.getChildren().forEach(element => element.flap());
     }
+    // Calculate fitness for each bird
+    var fitness = 0;
+    for(var loop = 0; loop < this.bird_objects.length; loop++)
+    {
+        fitness = this.bird_objects[loop].score * 150 + (this.bird_objects[loop].x - this.pipe_objects[this.target_idx].x + 150);
+        console.log(fitness);
+    }
+    // Rotation of the bird body depending on velocity
+
+    /*
+    for(var loop = 0; loop < this.bird_objects.length; loop++)
+    {
+        if(this.bird_objects[loop].velocity > 0)
+        {
+            this.bird_objects[loop].body.angle =  this.bird_objects[loop].velocity * 45/200
+        }
+        else
+        {
+            this.bird_objects[loop].body.angle =  this.bird_objects[loop].velocity * 45/800
+        }
+    }
+    */
+
+    // Reset the pipes out of the boundaries
     if(this.pipe_objects[this.reset_idx].x < -100)
     {
         y = Math.floor(Math.random()*200) + 100;
@@ -84,6 +104,8 @@ function update ()
         this.reset_idx += 2;
         this.reset_idx = this.reset_idx % 8;
     }
+
+    // Update score and target index
     if(this.pipe_objects[this.target_idx].x < 10)
     {
         this.target_idx += 2;
@@ -91,7 +113,9 @@ function update ()
         this.score ++;
         this.score_text.setText('Score: ' + this.score);
     }
+    this.bird_objects[0].score = this.score;
 }
+// Create pipe pairs
 function create_pairs(scene, x)
 {
     let top_y = Math.floor(Math.random()*200) + 100;
@@ -139,11 +163,13 @@ class Pipe extends Phaser.Physics.Arcade.Sprite
 
 class Bird extends Phaser.Physics.Arcade.Sprite
 {
-    constructor(scene)
+    constructor(scene, index)
     {
         super(scene, 50, 300,'bird');
         scene.physics.add.existing(this);
         this.setCollideWorldBounds(true);
+        this.score = 0;
+        this.index = index;
     }
     flap()
     {
