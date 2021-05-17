@@ -8,7 +8,9 @@ class Agent
         this.score     = 1;
         this.index     = idx;
         this.isWinner  = false;
-
+        
+        // Network: 2 -> 6 -> 1
+        
         this.model = tf.sequential();
         const NEURONS = 6; // Number of neurons in hidden layer
         var hidden_layer = tf.layers.dense({

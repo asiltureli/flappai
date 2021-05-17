@@ -17,7 +17,6 @@ class Population
         this.generation     = 1; // Current generation
         this.best_unit      = 0; // Index of best unit
         // Create fresh model for each Agent
-        // Network: 1 -> 6 -> 1
         for(var i = 0; i < this.population_amount; i++)
         { 
             this.Agents.push(new Agent(i));
@@ -27,7 +26,7 @@ class Population
     {
         // Create new population
         this.Agents.splice(0, this.Agents.length); // Clear all existing agents
-        console.log(this.Agents);
+
         for(var i = 0; i < this.population_amount; i++)
         { 
             this.Agents.push(new Agent(i));
@@ -48,7 +47,6 @@ class Population
     {
         // Apply selection and get best units
         var nextGen = this.selection();
-        console.log(nextGen[0].fitness);
         if(nextGen[0].fitness < 1 )
         {
             this.new_population();
@@ -65,10 +63,8 @@ class Population
             {
                 return offspring = this.crossover(nextGen[rand1].model, nextGen[rand2].model);
             });
-            //console.log('offspring');
             //offspring = this.mutation(offspring);
             this.Agents[loop].model = offspring;
-            console.log(this.Agents);
         }
         
 
@@ -100,7 +96,6 @@ class Population
     // Slices bias tensor into 2 and exchange the biases
     exchange_bias(tensor_a, tensor_b)
     {
-        //const t_size = Math.ceil(tensor_a.size / 2);
         var cutPoint = Math.ceil(Math.random(0,tensor_a.size));
         return tf.tidy(() => 
         {
@@ -125,10 +120,7 @@ class Population
     mutation(next_gen)
     {
         // mutate weights
-        console.log(next_gen.getWeights());
-        console.log(next_gen.layers);
-        console.log(next_gen.layers[0]);
-        console.log(next_gen.layers[0].getWeights()[0]);
+
         for(var loop_layers = 0; loop_layers < 2; loop_layers++)
         {
             next_gen.layers[loop_layers].setWeights(this.mutate(next_gen.layers[loop_layers].getWeights()))
@@ -141,7 +133,6 @@ class Population
             var mutation_factor = 1 + (Math.random() - 0.5) + (Math.random() - 0.5);
             value *= mutation_factor;
         }
-        console.log(value);
         return value
     }
 

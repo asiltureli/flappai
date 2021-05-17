@@ -39,7 +39,6 @@ function create ()
     this.population_amount = 10;
     this.agents = new Population(this.population_amount,5);
     // Create Starting Images
-    console.log(this.agents.Agents[0])
     this.add.image(0,0, 'sky').setOrigin(0,0);
 
     // Create Birds and set properties
@@ -48,7 +47,6 @@ function create ()
     {
         this.BirdGroup.add(new Bird(this, bird_num), true);
     }
-    console.log(this.BirdGroup.getChildren()[0])
     this.BirdGroup.getChildren().forEach(element => element.setCollideWorldBounds(true));
 
     this.BirdGroup.getChildren().forEach(element => element.setGravityY(800));
@@ -204,8 +202,7 @@ function bird_dead(scene, bird)
         var fit_y = (800 - bird.y - hole_y) / 800;
         // Reward birds that are close to the pipes with ~1
         var fit_x = (150 - (scene.PipeGroup.getChildren()[scene.target_idx].x - bird.x))/150;
-        console.log(fit_x);
-        console.log(fit_y);
+        
         scene.agents.Agents[bird.index].setFitness(bird.score) + fit_x + fit_y;
         bird.death();
     }
