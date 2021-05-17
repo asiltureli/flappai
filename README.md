@@ -1,2 +1,2 @@
 # FlappAI
-Flappy Bird Agent trained with RL and Genetic Algorithms
+Flappy Bird Agent based on Artificial Neural Networks and trained with Genetic Algorithms
